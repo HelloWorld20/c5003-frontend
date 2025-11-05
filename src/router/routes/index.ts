@@ -1,22 +1,17 @@
-import type { CustomRoute, ElegantConstRoute, ElegantRoute } from '@elegant-router/types';
-import { generatedRoutes } from '../elegant/routes';
-import { layouts, views } from '../elegant/imports';
-import { transformElegantRoutesToVueRoutes } from '../elegant/transform';
+import type { RouteRecordRaw } from 'vue-router';
+import { routes } from '../elegant/routes';
 
 /**
  * custom routes
- *
- * @link https://github.com/soybeanjs/elegant-router?tab=readme-ov-file#custom-route
  */
-const customRoutes: CustomRoute[] = [];
+const customRoutes: RouteRecordRaw[] = [];
 
 /** create routes when the auth route mode is static */
 export function createStaticRoutes() {
-  const constantRoutes: ElegantRoute[] = [];
+  const constantRoutes: RouteRecordRaw[] = [];
+  const authRoutes: RouteRecordRaw[] = [];
 
-  const authRoutes: ElegantRoute[] = [];
-
-  [...customRoutes, ...generatedRoutes].forEach(item => {
+  [...customRoutes, ...routes].forEach(item => {
     if (item.meta?.constant) {
       constantRoutes.push(item);
     } else {
@@ -33,8 +28,8 @@ export function createStaticRoutes() {
 /**
  * Get auth vue routes
  *
- * @param routes Elegant routes
+ * @param authRoutes Auth routes
  */
-export function getAuthVueRoutes(routes: ElegantConstRoute[]) {
-  return transformElegantRoutesToVueRoutes(routes, layouts, views);
+export function getAuthVueRoutes(authRoutes: RouteRecordRaw[]) {
+  return authRoutes;
 }

@@ -56,3 +56,17 @@ export function toggleHtmlClass(className: string) {
     remove
   };
 }
+
+/**
+ * 删除对象中的null、undefined和空字符串属性
+ */
+export const cleanObj = (obj: Record<string, any>) => {
+  if (!obj) return obj;
+  Object.keys(obj).forEach(key => {
+    if (obj[key] === undefined || obj[key] === null || obj[key] === '') {
+      delete obj[key];
+    }
+  });
+
+  return obj;
+};

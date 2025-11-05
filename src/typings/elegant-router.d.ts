@@ -20,12 +20,11 @@ declare module "@elegant-router/types" {
     "403": "/403";
     "404": "/404";
     "500": "/500";
+    "employees-detail": "/employees-detail/:id";
     "home": "/home";
     "iframe-page": "/iframe-page/:url";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
     "manage": "/manage";
-    'demo-route': '/demo-route';
-    'demo-route_child': '/demo-route_child';
     "manage_user": "/manage/user";
   };
 
@@ -41,7 +40,7 @@ declare module "@elegant-router/types" {
 
   /**
    * custom route key
-   */
+   */ 
   export type CustomRouteKey = Extract<
     RouteKey,
     | "root"
@@ -50,7 +49,7 @@ declare module "@elegant-router/types" {
 
   /**
    * the generated route key
-   */
+   */ 
   export type GeneratedRouteKey = Exclude<RouteKey, CustomRouteKey>;
 
   /**
@@ -61,6 +60,7 @@ declare module "@elegant-router/types" {
     | "403"
     | "404"
     | "500"
+    | "employees-detail"
     | "home"
     | "iframe-page"
     | "login"
@@ -86,6 +86,7 @@ declare module "@elegant-router/types" {
     | "500"
     | "iframe-page"
     | "login"
+    | "employees-detail"
     | "home"
     | "manage_user"
   >;
@@ -159,7 +160,7 @@ declare module "@elegant-router/types" {
         component: `view.${K}`;
       }
     : never;
-
+  
   /**
    * the center level route
    */
@@ -182,7 +183,7 @@ declare module "@elegant-router/types" {
         children: (CenterLevelRoute<GetChildRouteKey<K>> | LastLevelRoute<GetChildRouteKey<K>>)[];
       }
     : never;
-
+  
   /**
    * the custom first level route
    */

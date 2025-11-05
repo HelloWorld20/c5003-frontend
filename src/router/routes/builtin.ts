@@ -1,21 +1,26 @@
-import type { CustomRoute } from '@elegant-router/types';
-import { layouts, views } from '../elegant/imports';
-import { getRoutePath, transformElegantRoutesToVueRoutes } from '../elegant/transform';
+import type { RouteRecordRaw } from 'vue-router';
+import { routes } from '../elegant/routes';
 
-export const ROOT_ROUTE: CustomRoute = {
+export const ROOT_ROUTE: RouteRecordRaw = {
   name: 'root',
   path: '/',
-  redirect: getRoutePath(import.meta.env.VITE_ROUTE_HOME) || '/home',
+  redirect: import.meta.env.VITE_ROUTE_HOME || '/home',
   meta: {
     title: 'root',
     constant: true
   }
 };
 
-const NOT_FOUND_ROUTE: CustomRoute = {
+const NOT_FOUND_ROUTE: RouteRecordRaw = {
   name: 'not-found',
   path: '/:pathMatch(.*)*',
-  component: 'layout.blank$view.404',
+  component: () => import('@/layouts/blank-layout/index.vue'),
+  children: [
+    {
+      path: '',
+      component: () => import('@/views/_builtin/404/index.vue')
+    }
+  ],
   meta: {
     title: 'not-found',
     constant: true
@@ -23,9 +28,9 @@ const NOT_FOUND_ROUTE: CustomRoute = {
 };
 
 /** builtin routes, it must be constant and setup in vue-router */
-const builtinRoutes: CustomRoute[] = [ROOT_ROUTE, NOT_FOUND_ROUTE];
+const builtinRoutes: RouteRecordRaw[] = [ROOT_ROUTE, NOT_FOUND_ROUTE, ...routes];
 
 /** create builtin vue routes */
 export function createBuiltinVueRoutes() {
-  return transformElegantRoutesToVueRoutes(builtinRoutes, layouts, views);
+  return builtinRoutes;
 }

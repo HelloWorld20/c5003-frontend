@@ -27,7 +27,9 @@ const activeMenu = computed(() => {
   return menuMap[themeStore.layout.mode];
 });
 
-const reRenderVertical = computed(() => themeStore.layout.mode === 'vertical' && appStore.isMobile);
+const reRenderVertical = computed(() => {
+  return themeStore.layout.mode === 'vertical' && appStore.isMobile;
+});
 </script>
 
 <template>

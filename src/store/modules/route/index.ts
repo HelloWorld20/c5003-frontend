@@ -2,7 +2,6 @@ import { computed, nextTick, ref, shallowRef } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
 import { useBoolean } from '@sa/hooks';
-import type { CustomRoute, ElegantConstRoute, LastLevelRouteKey, RouteKey, RouteMap } from '@elegant-router/types';
 import { router } from '@/router';
 import { fetchGetConstantRoutes, fetchGetUserRoutes, fetchIsRouteExist } from '@/service/api';
 import { SetupStoreId } from '@/enum';
@@ -46,31 +45,35 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
    *
    * @param routeKey Route key
    */
-  function setRouteHome(routeKey: LastLevelRouteKey) {
+  function setRouteHome(routeKey: string) {
     routeHome.value = routeKey;
   }
 
   /** constant routes */
-  const constantRoutes = shallowRef<ElegantConstRoute[]>([]);
+  const constantRoutes = shallowRef<RouteRecordRaw[]>([]);
 
-  function addConstantRoutes(routes: ElegantConstRoute[]) {
-    const constantRoutesMap = new Map<string, ElegantConstRoute>([]);
+  function addConstantRoutes(routes: RouteRecordRaw[]) {
+    const constantRoutesMap = new Map<string, RouteRecordRaw>([]);
 
     routes.forEach(route => {
-      constantRoutesMap.set(route.name, route);
+      if (route.name) {
+        constantRoutesMap.set(route.name.toString(), route);
+      }
     });
 
     constantRoutes.value = Array.from(constantRoutesMap.values());
   }
 
   /** auth routes */
-  const authRoutes = shallowRef<ElegantConstRoute[]>([]);
+  const authRoutes = shallowRef<RouteRecordRaw[]>([]);
 
-  function addAuthRoutes(routes: ElegantConstRoute[]) {
-    const authRoutesMap = new Map<string, ElegantConstRoute>([]);
+  function addAuthRoutes(routes: RouteRecordRaw[]) {
+    const authRoutesMap = new Map<string, RouteRecordRaw>([]);
 
     routes.forEach(route => {
-      authRoutesMap.set(route.name, route);
+      if (route.name) {
+        authRoutesMap.set(route.name.toString(), route);
+      }
     });
 
     authRoutes.value = Array.from(authRoutesMap.values());

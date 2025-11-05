@@ -19,7 +19,7 @@ const createReqeust = () => {
     err => {
       console.log('%c [ err ]-15', 'font-size:13px; background:pink; color:#bf2c9f;', err);
       if (err.status !== 200) {
-        return Promise.reject(err.response.data.detail);
+        return Promise.reject(err.response?.data?.detail);
         // return err.response.data.detail;
       }
       return err;
@@ -48,6 +48,24 @@ export const post = (url: string, data?: Record<string, any>, config?: AxiosRequ
   return request({
     url,
     method: 'post',
+    data,
+    ...config
+  });
+};
+
+export const put = (url: string, data?: Record<string, any>, config?: AxiosRequestConfig) => {
+  return request({
+    url,
+    method: 'put',
+    data,
+    ...config
+  });
+};
+
+export const del = (url: string, data?: Record<string, any>, config?: AxiosRequestConfig) => {
+  return request({
+    url,
+    method: 'delete',
     data,
     ...config
   });

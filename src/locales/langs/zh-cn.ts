@@ -170,7 +170,8 @@ const local: App.I18n.Schema = {
     'demo-route': '演示路由',
     'demo-route_child': '演示子路由',
     manage: '系统管理',
-    manage_user: '用户管理'
+    manage_user: '用户管理',
+    'employees-detail': '员工详情'
   },
   page: {
     login: {

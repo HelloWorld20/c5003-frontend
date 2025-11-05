@@ -170,7 +170,8 @@ const local: App.I18n.Schema = {
     'demo-route': 'Demo Route',
     'demo-route_child': 'Demo Child Route',
     manage: 'System Management',
-    manage_user: 'User Management'
+    manage_user: 'User Management',
+    'employees-detail': 'Employee Details'
   },
   page: {
     login: {
