@@ -1,16 +1,9 @@
 # 如何运行代码
 
-## 1) 安装 Node.js（必须）
-- 打开 https://nodejs.org 下载并安装最新版的安装包。
-- 根据指引安装完成后打开终端/命令提示符，输入：
-  ```bash
-  node -v
-  ```
-
-## 2) 运行
+##  运行
 
 ```bash
-node app.mjs
+python app.py
 ```
 
 服务启动后，浏览器访问`http://localhost:9527`即可访问前端界面
