@@ -2,6 +2,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton, NCard, NDatePicker, NForm, NFormItemGi, NGrid, NInput, NSelect, useMessage } from 'naive-ui';
+import dayjs from 'dayjs';
 import { addEmployee, fetchEmployeeById, updateEmployee } from '@/service/api/employee';
 import { fetchDepartmentsList } from '@/service/api/departments';
 
@@ -28,7 +29,8 @@ const formData = reactive({
   hire_date: null,
   dept_no: '',
   title: '',
-  salary: ''
+  salary: '',
+  to_date: null
 });
 
 /**
@@ -49,8 +51,9 @@ async function loadEmployeeDetails() {
     formData.salary = `${data.salary}` || '';
     formData.birth_date = data.birth_date ? new Date(data.birth_date).getTime() : null;
     formData.hire_date = data.hire_date ? new Date(data.hire_date).getTime() : null;
-    formData.dept_no = data.dept_no ?? '';
+    formData.dept_no = data.dept_no ?? `${Math.floor(Math.random() * 900000) + 10000}`;
     formData.title = data.title ?? '';
+    formData.to_date = data.to_date ? new Date(data.to_date).getTime() : null;
 
     initialData.value = { ...formData };
   } catch (err) {
@@ -154,15 +157,15 @@ const handleSubmit = () => {
         title: formData.title,
         emp_no: formData.emp_no,
 
-        birth_date: formData.birth_date ? new Date(formData.birth_date).toISOString().split('T')[0] : null,
-        hire_date: formData.hire_date ? new Date(formData.hire_date).toISOString().split('T')[0] : null
+        birth_date: formData.birth_date ? dayjs(formData.birth_date).format('YYYY-MM-DD') : null,
+        hire_date: formData.hire_date ? dayjs(formData.hire_date).format('YYYY-MM-DD') : null
       };
 
       // 如果dept_no, salary,title 没有改变，删除没改变的值
-      if (params.dept_no === initialData.value.dept_no) delete params.dept_no;
+      if (params.dept_no === initialData.value?.dept_no) delete params.dept_no;
 
-      if (params.salary === initialData.value.salary) delete params.salary;
-      if (params.title === initialData.value.title) delete params.title;
+      if (params.salary === initialData.value?.salary) delete params.salary;
+      if (params.title === initialData.value?.title) delete params.title;
 
       try {
         if (emp_no) {
@@ -174,7 +177,8 @@ const handleSubmit = () => {
           });
         } else {
           await addEmployee({
-            ...params
+            ...params,
+            emp_no: Math.floor(Math.random() * 900000) + 10000
           }).then(() => {
             // You can choose to return to the list page
             // router.push('/employees');

@@ -1,0 +1,1 @@
+import{bX as t,ca as r,cb as s,cc as n}from"./index-CfpZo8w-.js";function l(a){return t("/salary/list",a)}function u(a){return r("/salary/deletion",{Employee_ID:a})}function d(a){return n("/salary/addition",a)}function i(a){return s("/salary/update",a)}export{d as a,u as d,l as f,i as u};

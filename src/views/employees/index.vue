@@ -3,6 +3,7 @@ import { h, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { DataTableColumns } from 'naive-ui';
 import { NButton, NPopconfirm, NSpace } from 'naive-ui';
+import dayjs from 'dayjs';
 import { delEmployee, fetchEmployeesList } from '@/service/api/employee';
 import { cleanObj } from '@/utils/common';
 
@@ -20,7 +21,7 @@ interface UserData {
 const router = useRouter();
 
 // 搜索表单数据
-const searchForm = reactive({
+const searchForm = ref({
   emp_no: '',
   birth_date: null,
   hire_date: null,
@@ -195,17 +196,24 @@ function handleAdd() {
 }
 
 function doReset() {
-  Object.assign(searchForm, {
+  searchForm.value = {
     emp_no: '',
     birth_date: null,
     hire_date: null,
     name: '',
     gender: ''
-  });
+  };
 }
 
 function search() {
-  let params: any = Object.assign(searchForm, pagination);
+  // let params: any = Object.assign(searchForm.value, pagination);
+  let params: any = {
+    ...searchForm.value,
+    ...pagination,
+    birth_date: searchForm.value.birth_date ? dayjs(searchForm.value.birth_date).format('YYYY-MM-DD') : undefined,
+    hire_date: searchForm.value.hire_date ? dayjs(searchForm.value.hire_date).format('YYYY-MM-DD') : undefined
+  };
+
   delete params['item-count'];
   params = cleanObj(params);
   fetchEmployeesList(params).then((res: any) => {
@@ -222,7 +230,7 @@ onMounted(() => {
 });
 
 watch(
-  () => [pagination.page, pagination.pageSize],
+  () => [pagination.page, pagination.pageSize, searchForm.value],
   () => {
     search();
   }
@@ -242,10 +250,10 @@ watch(
             <NInput v-model:value="searchForm.emp_no" clearable />
           </NFormItemGi>
           <NFormItemGi label="birth_date">
-            <NDatePicker v-model:value="searchForm.birth_date" type="daterange" clearable />
+            <NDatePicker v-model:value="searchForm.birth_date" type="date" clearable />
           </NFormItemGi>
           <NFormItemGi label="hire_date">
-            <NDatePicker v-model:value="searchForm.hire_date" type="daterange" clearable />
+            <NDatePicker v-model:value="searchForm.hire_date" type="date" clearable />
           </NFormItemGi>
 
           <NFormItemGi label="gender">
@@ -253,7 +261,6 @@ watch(
               v-model:value="searchForm.gender"
               clearable
               :options="[
-                { label: 'All', value: 'ALL' },
                 { label: 'Male', value: 'M' },
                 { label: 'Female', value: 'F' }
               ]"
