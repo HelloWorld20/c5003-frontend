@@ -103,7 +103,7 @@ function handleEdit(row: UserData) {
   router.push({
     path: `/departments/detail`,
     query: {
-      ...row
+      dept_no: row.dept_no
     }
   });
 }
@@ -113,9 +113,9 @@ async function handleDelete(row: UserData) {
   try {
     await delDepartment(row.dept_no);
     search();
-    window.$message?.success('删除成功');
-  } catch {
-    window.$message?.error('删除失败');
+    window.$message?.success('delete success');
+  } catch (err: any) {
+    window.$message?.error(err || 'fail to delete');
   }
   // 实现删除功能
   // const index = userData.value.findIndex(item => item.id === row.emp_no);

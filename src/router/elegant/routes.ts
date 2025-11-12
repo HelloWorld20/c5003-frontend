@@ -59,7 +59,7 @@ export const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        component: () => import('@/views/home/index.vue')
+        component: () => import('@/views/home/sql.vue')
       },
       {
         name: 'home_sql',
@@ -230,6 +230,61 @@ export const routes: RouteRecordRaw[] = [
     ],
     meta: {
       title: 'salaries',
+      i18nKey: 'route.manage'
+    }
+  },
+  {
+    name: 'charts',
+    path: '/charts',
+    component: () => import('@/layouts/base-layout/index.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/charts/headcount.vue')
+      },
+      {
+        name: 'charts_headcount',
+        path: 'headcount',
+        component: () => import('@/views/charts/headcount.vue'),
+        meta: {
+          title: 'charts_headcount'
+        }
+      },
+      {
+        name: 'charts_current_employee_per_department',
+        path: 'current-employee-per-department',
+        component: () => import('@/views/charts/current-employee-per-department.vue'),
+        meta: {
+          title: 'charts_current_employee_per_department'
+        }
+      },
+      {
+        name: 'charts_salary_title',
+        path: 'salary-title',
+        component: () => import('@/views/charts/salary-title.vue'),
+        meta: {
+          title: 'charts_salary_title'
+        }
+      },
+      {
+        name: 'charts_gender_role',
+        path: 'gender-role',
+        component: () => import('@/views/charts/gender-role.vue'),
+        meta: {
+          title: 'charts_gender_role'
+        }
+      },
+      {
+        name: 'charts_distribution',
+        path: 'distribution',
+        component: () => import('@/views/charts/distribution.vue'),
+        meta: {
+          title: 'charts_distribution'
+        }
+      }
+    ],
+    meta: {
+      title: 'charts',
       i18nKey: 'route.manage'
     }
   }

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton, NCard, NForm, NFormItemGi, NGrid, NInput, useMessage } from 'naive-ui';
-import { addDepartment, updateDepartment } from '@/service/api/departments';
+import { addDepartment, getDepartmentDetail, updateDepartment } from '@/service/api/departments';
 
 defineOptions({ name: 'DepartmentDetail' });
 
@@ -11,13 +11,13 @@ const router = useRouter();
 const message = useMessage();
 
 // 获取路由参数中的部门信息（兼容列表页传入的小写字段）
-// 可能的参数：Dept_ID、Dept_Name 或 dept_no、dept_name
-const { Dept_ID, Dept_Name, dept_no, dept_name } = route.query;
+// 可能的参数：dept_no、dept_name 或 dept_no、dept_name
+const { dept_no } = route.query;
 
-// 表单数据：仅包含 Dept_ID、Dept_Name 两个字段
+// 表单数据：仅包含 dept_no、dept_name 两个字段
 const formData = reactive({
-  Dept_ID: (Dept_ID as string) || (dept_no as string) || '',
-  Dept_Name: (Dept_Name as string) || (dept_name as string) || ''
+  dept_no: '',
+  dept_name: ''
 });
 
 // Form reference
@@ -25,31 +25,33 @@ const formRef = ref();
 
 // 表单校验规则：两个字段必填
 const rules: any = {
-  Dept_ID: {
+  dept_no: [
+    {
+      required: true,
+      message: 'Please enter dept_no',
+      trigger: 'blur'
+    }
+  ],
+  dept_name: {
     required: true,
-    message: 'Please enter Dept_ID',
-    trigger: 'blur'
-  },
-  Dept_Name: {
-    required: true,
-    message: 'Please enter Dept_Name',
+    message: 'Please enter dept_name',
     trigger: 'blur'
   }
 };
 
 /**
- * 提交表单：如果存在 Dept_ID（编辑模式），则调用更新；否则调用新增
+ * 提交表单：如果存在 dept_no（编辑模式），则调用更新；否则调用新增
  */
 const handleSubmit = () => {
   formRef.value?.validate((errors: any) => {
     if (!errors) {
       // 组装提交参数
       const payload = {
-        Dept_ID: formData.Dept_ID,
-        Dept_Name: formData.Dept_Name
+        dept_no: formData.dept_no,
+        dept_name: formData.dept_name
       };
 
-      if (formData.Dept_ID) {
+      if (dept_no) {
         // 更新部门信息
         updateDepartment(payload).then(() => {
           message.success('Department updated successfully!');
@@ -75,8 +77,8 @@ const handleReset = () => {
   formRef.value?.restoreValidation();
   // 重置为初始值
   Object.assign(formData, {
-    Dept_ID: (Dept_ID as string) || (dept_no as string) || '',
-    Dept_Name: (Dept_Name as string) || (dept_name as string) || ''
+    dept_no: '',
+    dept_name: ''
   });
 };
 
@@ -86,6 +88,17 @@ const handleReset = () => {
 const handleBack = () => {
   router.push('/departments');
 };
+
+onMounted(() => {
+  // 加载部门详情
+  if (!dept_no) return;
+  getDepartmentDetail(dept_no as string).then((res: any) => {
+    // 填充表单数据
+    // Object.assign(formData, res.data);
+    formData.dept_no = res?.[0].dept_no;
+    formData.dept_name = res?.[0].dept_name;
+  });
+});
 </script>
 
 <template>
@@ -100,19 +113,21 @@ const handleBack = () => {
         class="space-y-4"
       >
         <NGrid :cols="2" :x-gap="24" :y-gap="16">
-          <!-- Dept_ID -->
-          <NFormItemGi label="Dept_ID" path="Dept_ID">
+          <!-- dept_no -->
+          <NFormItemGi label="dept_no" path="dept_no">
             <NInput
-              v-model:value="formData.Dept_ID"
-              placeholder="Please enter Dept_ID"
-              :disabled="!!Dept_ID || !!dept_no"
+              v-model:value="formData.dept_no"
+              placeholder="Please enter dept_no"
+              :disabled="!!dept_no || !!dept_no"
               class="w-full"
+              maxlength="4"
+              show-count
             />
           </NFormItemGi>
 
-          <!-- Dept_Name -->
-          <NFormItemGi label="Dept_Name" path="Dept_Name">
-            <NInput v-model:value="formData.Dept_Name" placeholder="Please enter Dept_Name" class="w-full" />
+          <!-- dept_name -->
+          <NFormItemGi label="dept_name" path="dept_name">
+            <NInput v-model:value="formData.dept_name" placeholder="Please enter dept_name" class="w-full" />
           </NFormItemGi>
         </NGrid>
 

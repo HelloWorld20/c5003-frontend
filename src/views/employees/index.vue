@@ -148,12 +148,11 @@ const columns: DataTableColumns<UserData> = [
 
 // 编辑用户
 function handleEdit(row: UserData) {
-  console.log('编辑用户:', row);
   // 实现编辑功能
   router.push({
     path: `employees/detail`,
     query: {
-      ...row
+      emp_no: row.emp_no
     }
   });
 }
@@ -163,9 +162,9 @@ async function handleDelete(row: UserData) {
   try {
     await delEmployee(row.emp_no);
     search();
-    window.$message?.success('删除成功');
-  } catch {
-    window.$message?.error('删除失败');
+    window.$message?.success('delete success');
+  } catch (err: any) {
+    window.$message?.error(err || 'fail to delete');
   }
   // 实现删除功能
   // const index = userData.value.findIndex(item => item.id === row.emp_no);

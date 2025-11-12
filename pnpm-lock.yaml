@@ -77,6 +77,9 @@ importers:
       vue-draggable-plus:
         specifier: 0.6.0
         version: 0.6.0(@types/sortablejs@1.15.9)
+      vue-echarts:
+        specifier: ^8.0.1
+        version: 8.0.1(echarts@6.0.0)(vue@3.5.20(typescript@5.9.2))
       vue-i18n:
         specifier: 11.1.11
         version: 11.1.11(vue@3.5.20(typescript@5.9.2))
@@ -4263,6 +4266,12 @@ packages:
     peerDependenciesMeta:
       '@vue/composition-api':
         optional: true
+
+  vue-echarts@8.0.1:
+    resolution: {integrity: sha512-23rJTFLu1OUEGRWjJGmdGt8fP+8+ja1gVgzMYPIPaHWpXegcO1viIAaeu2H4QHESlVeHzUAHIxKXGrwjsyXAaA==}
+    peerDependencies:
+      echarts: ^6.0.0
+      vue: ^3.3.0
 
   vue-eslint-parser@10.2.0:
     resolution: {integrity: sha512-CydUvFOQKD928UzZhTp4pr2vWz1L+H99t7Pkln2QSPdvmURT0MoC4wUccfCnuEaihNsu9aYYyk+bep8rlfkUXw==}
@@ -8716,6 +8725,11 @@ snapshots:
   vue-draggable-plus@0.6.0(@types/sortablejs@1.15.9):
     dependencies:
       '@types/sortablejs': 1.15.9
+
+  vue-echarts@8.0.1(echarts@6.0.0)(vue@3.5.20(typescript@5.9.2)):
+    dependencies:
+      echarts: 6.0.0
+      vue: 3.5.20(typescript@5.9.2)
 
   vue-eslint-parser@10.2.0(eslint@9.34.0(jiti@2.6.1)):
     dependencies:

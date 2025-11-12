@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { NButton, NCard, NDatePicker, NForm, NFormItemGi, NGrid, NInput, NSelect, useMessage } from 'naive-ui';
-import { addEmployee, updateEmployee } from '@/service/api/employee';
+import { addEmployee, fetchEmployeeById, updateEmployee } from '@/service/api/employee';
+import { fetchDepartmentsList } from '@/service/api/departments';
 
 defineOptions({ name: 'EmployeeDetail' });
 
@@ -10,18 +11,52 @@ const route = useRoute();
 const router = useRouter();
 const message = useMessage();
 
+const initialData = ref<any>(null);
+
 // Get employee information from route parameters
-const { emp_no, birth_date, first_name, last_name, gender, hire_date } = route.query;
+// const { emp_no, birth_date, first_name, last_name, gender, hire_date, department, title, salary } = route.query;
+
+const { emp_no } = route.query;
 
 // Form data
 const formData = reactive({
-  emp_no: (emp_no as string) || '',
-  birth_date: birth_date ? new Date(birth_date as string).getTime() : null,
-  first_name: (first_name as string) || '',
-  last_name: (last_name as string) || '',
-  gender: (gender as string) || '',
-  hire_date: hire_date ? new Date(hire_date as string).getTime() : null
+  emp_no: '',
+  birth_date: null,
+  first_name: '',
+  last_name: '',
+  gender: '',
+  hire_date: null,
+  dept_no: '',
+  title: '',
+  salary: ''
 });
+
+/**
+ * 加载员工详情
+ *
+ * 调用接口 `GET /employees/{emp_no}`，将返回的员工信息填充到表单中
+ */
+async function loadEmployeeDetails() {
+  if (!emp_no) return;
+  try {
+    const resp = await fetchEmployeeById(emp_no as string);
+    const data = Array.isArray(resp) ? resp?.[0] : (resp?.data ?? resp); // 兼容不同返回结构
+    if (!data) return;
+    formData.emp_no = `${data.emp_no}` || '';
+    formData.first_name = data.first_name ?? '';
+    formData.last_name = data.last_name ?? '';
+    formData.gender = data.gender ?? '';
+    formData.salary = `${data.salary}` || '';
+    formData.birth_date = data.birth_date ? new Date(data.birth_date).getTime() : null;
+    formData.hire_date = data.hire_date ? new Date(data.hire_date).getTime() : null;
+    formData.dept_no = data.dept_no ?? '';
+    formData.title = data.title ?? '';
+
+    initialData.value = { ...formData };
+  } catch (err) {
+    console.error('加载员工详情失败:', err);
+  }
+}
 
 // Form reference
 const formRef = ref();
@@ -31,6 +66,29 @@ const genderOptions = [
   { label: 'Male', value: 'M' },
   { label: 'Female', value: 'F' }
 ];
+
+// 部门选项（从接口加载）
+const departmentOptions = ref<Array<{ label: string; value: string }>>([]);
+
+/**
+ * 加载部门列表并渲染下拉选项
+ *
+ * 调用接口 `GET /dept/list`，参数固定为 `Page_Number=1`、`Row_Count=99`
+ * 将返回的 `{ dept_no, dept_name }[]` 映射为 `{ label, value }`
+ */
+async function loadDepartments() {
+  try {
+    const resp = await fetchDepartmentsList({ Page_Number: 1, Row_Count: 99 });
+    const list = Array.isArray(resp) ? resp : (resp?.data ?? []);
+    departmentOptions.value = list.map((item: any) => ({
+      label: item.dept_name,
+      value: item.dept_no
+    }));
+  } catch (err) {
+    console.error('加载部门列表失败:', err);
+    message.error('加载部门列表失败');
+  }
+}
 
 // Form validation rules
 const rules: any = {
@@ -65,42 +123,69 @@ const rules: any = {
     type: 'number',
     message: 'Please select hire date',
     trigger: 'change'
+  },
+  dept_no: {
+    required: true,
+    message: 'Please select department',
+    trigger: 'change'
+  },
+  title: {
+    required: true,
+    message: 'Please select title',
+    trigger: 'change'
+  },
+  salary: {
+    required: true,
+    message: 'Please enter salary',
+    trigger: 'blur'
   }
 };
 
 // Submit form
 const handleSubmit = () => {
-  console.log('formData', formData, formData.birth_date, formData.hire_date);
-  formRef.value?.validate((errors: any) => {
+  formRef.value?.validate(async (errors: any) => {
     if (!errors) {
-      // Here you can call API to save data
-      console.log('Submitted data:', {
-        ...formData,
+      const params: any = {
+        dept_no: formData.dept_no,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        gender: formData.gender,
+        salary: formData.salary,
+        title: formData.title,
+        emp_no: formData.emp_no,
+
         birth_date: formData.birth_date ? new Date(formData.birth_date).toISOString().split('T')[0] : null,
         hire_date: formData.hire_date ? new Date(formData.hire_date).toISOString().split('T')[0] : null
-      });
+      };
 
-      if (emp_no) {
-        // Call API to update employee information
-        updateEmployee(formData.emp_no, {
-          ...formData,
-          birth_date: formData.birth_date ? new Date(formData.birth_date).toISOString().split('T')[0] : null,
-          hire_date: formData.hire_date ? new Date(formData.hire_date).toISOString().split('T')[0] : null
-        }).then(() => {
-          // You can choose to return to the list page
-          // router.push('/employees');
-          message.success('Employee information updated successfully!');
-        });
-      } else {
-        addEmployee({
-          ...formData,
-          birth_date: formData.birth_date ? new Date(formData.birth_date).toISOString().split('T')[0] : null,
-          hire_date: formData.hire_date ? new Date(formData.hire_date).toISOString().split('T')[0] : null
-        }).then(() => {
-          // You can choose to return to the list page
-          // router.push('/employees');
-          message.success('Employee information added successfully!');
-        });
+      // 如果dept_no, salary,title 没有改变，删除没改变的值
+      if (params.dept_no === initialData.value.dept_no) delete params.dept_no;
+
+      if (params.salary === initialData.value.salary) delete params.salary;
+      if (params.title === initialData.value.title) delete params.title;
+
+      try {
+        if (emp_no) {
+          // Call API to update employee information
+          await updateEmployee(formData.emp_no, params).then(() => {
+            // You can choose to return to the list page
+            // router.push('/employees');
+            message.success('Employee information updated successfully!');
+          });
+        } else {
+          await addEmployee({
+            ...params
+          }).then(() => {
+            // You can choose to return to the list page
+            // router.push('/employees');
+            message.success('Employee information added successfully!');
+          });
+        }
+
+        loadEmployeeDetails();
+      } catch (err) {
+        console.error('提交员工信息失败:', err);
+        message.error('提交员工信息失败');
       }
     } else {
       message.error('Please check the form information');
@@ -111,21 +196,17 @@ const handleSubmit = () => {
 // Reset form
 const handleReset = () => {
   formRef.value?.restoreValidation();
-  // Reset to initial values
-  Object.assign(formData, {
-    emp_no: (emp_no as string) || '',
-    birth_date: birth_date ? new Date(birth_date as string).getTime() : null,
-    first_name: (first_name as string) || '',
-    last_name: (last_name as string) || '',
-    gender: (gender as string) || '',
-    hire_date: hire_date ? new Date(hire_date as string).getTime() : null
-  });
 };
 
 // Back to list
 const handleBack = () => {
   router.push('/employees');
 };
+
+onMounted(() => {
+  loadDepartments();
+  loadEmployeeDetails();
+});
 </script>
 
 <template>
@@ -189,6 +270,25 @@ const handleBack = () => {
               placeholder="Please select hire date"
               class="w-full"
             />
+          </NFormItemGi>
+          <!-- department -->
+          <NFormItemGi label="Department" path="department">
+            <NSelect
+              v-model:value="formData.dept_no"
+              :options="departmentOptions"
+              placeholder="Please select department"
+              class="w-full"
+            />
+          </NFormItemGi>
+
+          <!-- Title -->
+          <NFormItemGi label="Title" path="title">
+            <NInput v-model:value="formData.title" placeholder="Please enter title" class="w-full" />
+          </NFormItemGi>
+
+          <!-- Salary -->
+          <NFormItemGi label="Salary" path="salary">
+            <NInput v-model:value="formData.salary" placeholder="Please enter salary" class="w-full" />
           </NFormItemGi>
         </NGrid>
 

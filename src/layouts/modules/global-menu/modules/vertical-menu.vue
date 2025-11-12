@@ -49,11 +49,73 @@ const menuOptions = [
         { default: () => 'Home' }
       ),
     key: '1',
+    icon: renderIcon(BookIcon)
+    // children: [
+    //   {
+    //     label: () => h(RouterLink, { to: '/home/home_sql' }, { default: () => 'SQL' }),
+    //     key: '11'
+    //   }
+    // ]
+  },
+  {
+    label: 'Charts',
+    key: '3',
     icon: renderIcon(BookIcon),
     children: [
       {
-        label: () => h(RouterLink, { to: '/home/home_sql' }, { default: () => 'SQL' }),
-        key: '11'
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/charts/current-employee-per-department'
+            },
+            { default: () => 'Current Employee per Department' }
+          ),
+        key: '32'
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/charts/salary-title'
+            },
+            { default: () => 'Salary Title' }
+          ),
+        key: '33'
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/charts/gender-role'
+            },
+            { default: () => 'Gender Role' }
+          ),
+        key: '34'
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/charts/distribution'
+            },
+            { default: () => 'Distribution' }
+          ),
+        key: '35'
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/charts/headcount'
+            },
+            { default: () => 'Headcount' }
+          ),
+        key: '31'
       }
     ]
   },
@@ -64,36 +126,12 @@ const menuOptions = [
         {
           to: '/employees'
         },
-        { default: () => 'Employee' }
+        { default: () => 'Employees' }
       ),
     key: '2',
     icon: renderIcon(BookIcon)
-    // children: [
-    //   {
-    //     label: () =>
-    //       h(
-    //         RouterLink,
-    //         {
-    //           to: '/employees/dashboard'
-    //         },
-    //         { default: () => 'Employee Dashboard' }
-    //       ),
-    //     key: '22'
-    //   }
-    // ]
   },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: '/titles'
-        },
-        { default: () => 'Title Manage❌' }
-      ),
-    key: '3',
-    icon: renderIcon(BookIcon)
-  },
+
   {
     label: () =>
       h(
@@ -101,45 +139,9 @@ const menuOptions = [
         {
           to: '/departments'
         },
-        { default: () => 'Department' }
+        { default: () => 'Departments' }
       ),
     key: '4',
-    icon: renderIcon(BookIcon)
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: '/departments-manager'
-        },
-        { default: () => 'Department Manager❌' }
-      ),
-    key: '5',
-    icon: renderIcon(BookIcon)
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: '/departments-employees'
-        },
-        { default: () => 'Department Employees❌' }
-      ),
-    key: '6',
-    icon: renderIcon(BookIcon)
-  },
-  {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: '/salaries'
-        },
-        { default: () => 'Salary Manage❌' }
-      ),
-    key: '7',
     icon: renderIcon(BookIcon)
   }
 ];

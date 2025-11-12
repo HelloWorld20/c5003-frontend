@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { fetchExecutor } from '@/service/api/executor';
 defineOptions({ name: 'SqlExecutor' });
 
-const result = ref('');
+// 接口返回的原始结果（数组/对象/字符串等）
+const result = ref<any>(null);
 const error = ref('');
 const loading = ref(false);
 const examples = [
@@ -25,53 +26,137 @@ const sql = ref(examples[0]);
 
 const handleClean = () => {
   sql.value = '';
-  result.value = '';
+  result.value = null;
   error.value = '';
 };
 
+/**
+ * 执行 SQL，并根据接口返回设置结果与错误状态
+ *
+ * - 成功：`result` 直接保存原始数据（数组/对象/基础类型）
+ * - 失败：`error` 保存错误信息字符串，清空结果
+ */
 const handleRun = async () => {
   loading.value = true;
   try {
     const res = await fetchExecutor(sql.value);
-    result.value = JSON.stringify(res);
+    result.value = res;
     error.value = '';
   } catch (err: any) {
     // console.log('err', err);
-    error.value = err;
-    result.value = '';
+    error.value = String(err?.message ?? err);
+    result.value = null;
   } finally {
     loading.value = false;
   }
 };
 
-const handleCopy = (_sql: string) => {
-  navigator.clipboard.writeText(_sql);
-  window.$message?.success('复制成功');
-};
+// const handleCopy = (_sql: string) => {
+//   navigator.clipboard.writeText(_sql);
+//   window.$message?.success('复制成功');
+// };
 
-const handleCopy2Input = (_sql: string) => {
-  sql.value = _sql;
-};
+// const handleCopy2Input = (_sql: string) => {
+//   sql.value = _sql;
+// };
+/**
+ * 计算数组结果的列集合（合并所有行的键，保持唯一）
+ */
+const arrayKeys = computed(() => {
+  const arr = Array.isArray(result.value) ? result.value : [];
+  const set = new Set<string>();
+  for (const row of arr) {
+    Object.keys(row || {}).forEach(k => set.add(k));
+  }
+  return Array.from(set);
+});
+
+/**
+ * 单元格格式化：对象与数组展示为紧凑 JSON，其他类型按原值显示
+ */
+function formatCell(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'object') return JSON.stringify(val);
+  return String(val);
+}
+
+/**
+ * 美化对象值为带缩进的 JSON 字符串
+ */
+function pretty(val: unknown): string {
+  try {
+    return JSON.stringify(val, null, 2);
+  } catch {
+    return String(val);
+  }
+}
+
+/**
+ * 计算对象结果的键值对数组，便于在模板中安全遍历与显示
+ */
+const objectPairs = computed((): Array<[string | number, unknown]> => {
+  const obj = result.value;
+  if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+    try {
+      return Object.entries(obj as Record<string | number, unknown>);
+    } catch {
+      return [];
+    }
+  }
+  return [];
+});
 </script>
 
 <template>
   <NSpace vertical :size="16">
-    <NCard title="SQL执行">
+    <NCard title="SQL">
       <div class="flex gap-8px">
-        <NInput v-model:value="sql" placeholder="请输入SQL语句并且点击执行" />
-        <NButton type="primary" :loading="loading" @click="handleRun">执行</NButton>
-        <NButton type="warning" @click="handleClean">清空</NButton>
+        <NInput v-model:value="sql" type="textarea" />
+        <NButton type="primary" :loading="loading" @click="handleRun">execute</NButton>
+        <NButton type="warning" @click="handleClean">clear</NButton>
       </div>
     </NCard>
-    <NCard v-if="result" title="执行结果">
-      {{ result }}
+    <NCard v-if="result !== null" title="result">
+      <!-- 数组：使用 NTable 动态生成列与行 -->
+      <template v-if="Array.isArray(result)">
+        <NTable>
+          <thead>
+            <tr>
+              <th v-for="col in arrayKeys" :key="col">{{ col }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, idx) in result" :key="idx">
+              <td v-for="col in arrayKeys" :key="col">
+                {{ formatCell(row?.[col]) }}
+              </td>
+            </tr>
+          </tbody>
+        </NTable>
+      </template>
+
+      <!-- 对象：使用 NDescriptions 展示键值对；复杂值用预格式化 JSON -->
+      <template v-else-if="typeof result === 'object' && result">
+        <NDescriptions bordered label-placement="left" :column="2">
+          <NDescriptionsItem v-for="[key, val] in objectPairs" :key="String(key)" :label="String(key)">
+            <pre v-if="typeof val === 'object'" style="margin:0">{{ pretty(val) }}</pre>
+            <span v-else>{{ String(val) }}</span>
+          </NDescriptionsItem>
+        </NDescriptions>
+      </template>
+
+      <!-- 其他类型：以代码块形式展示 -->
+      <template v-else>
+        <NCode :code="String(result)" language="json" />
+      </template>
     </NCard>
-    <NCard v-if="error" title="报错信息">
+    <NCard v-if="error" title="error info">
       <NAlert type="error">
         {{ error }}
       </NAlert>
     </NCard>
-    <NCard title="SQL举例">
+    <!--
+ <NCard title="SQL举例">
       <NTable>
         <thead>
           <tr>
@@ -92,6 +177,7 @@ const handleCopy2Input = (_sql: string) => {
         </tbody>
       </NTable>
     </NCard>
+-->
   </NSpace>
 </template>
 
