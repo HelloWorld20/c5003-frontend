@@ -26,6 +26,8 @@ const { selectedKey } = useMenu();
 const inverted = computed(() => !themeStore.darkMode && themeStore.sider.inverted);
 
 const expandedKeys = ref<string[]>([]);
+const manuallyExpandedKeys = ref<Set<string>>(new Set());
+
 function renderIcon(icon: any) {
   return () => h(NIcon, null, { default: () => h(icon) });
 }
@@ -35,7 +37,28 @@ function updateExpandedKeys() {
     expandedKeys.value = [];
     return;
   }
-  expandedKeys.value = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+
+  const keyPath = routeStore.getSelectedMenuKeyPath(selectedKey.value);
+
+  // 合并自动展开的路径和手动展开的菜单
+  const allExpandedKeys = new Set([...keyPath, ...manuallyExpandedKeys.value]);
+  expandedKeys.value = Array.from(allExpandedKeys);
+}
+
+function handleMenuExpand(keys: string[]) {
+  manuallyExpandedKeys.value = new Set(keys);
+  expandedKeys.value = keys;
+}
+
+function handleMenuItemClick(key: any) {
+  routerPushByKeyWithMetaQuery(key);
+
+  // 点击子菜单项时，保持父菜单的展开状态
+  const parentKey = findParentKey(key);
+  if (parentKey) {
+    manuallyExpandedKeys.value.add(parentKey);
+    updateExpandedKeys();
+  }
 }
 
 const menuOptions = [
@@ -105,18 +128,18 @@ const menuOptions = [
             { default: () => 'Distribution' }
           ),
         key: '35'
-      },
-      {
-        label: () =>
-          h(
-            RouterLink,
-            {
-              to: '/charts/headcount'
-            },
-            { default: () => 'Headcount' }
-          ),
-        key: '31'
       }
+      // {
+      //   label: () =>
+      //     h(
+      //       RouterLink,
+      //       {
+      //         to: '/charts/headcount'
+      //       },
+      //       { default: () => 'Headcount' }
+      //     ),
+      //   key: '31'
+      // }
     ]
   },
   {
@@ -146,6 +169,18 @@ const menuOptions = [
   }
 ];
 
+function findParentKey(childKey: string): string | null {
+  for (const option of menuOptions) {
+    if (option.children) {
+      const child = option.children.find(c => c.key === childKey);
+      if (child) {
+        return option.key;
+      }
+    }
+  }
+  return null;
+}
+
 watch(
   () => route.name,
   () => {
@@ -169,7 +204,8 @@ watch(
         :inverted="inverted"
         :options="menuOptions"
         :indent="18"
-        @update:value="routerPushByKeyWithMetaQuery"
+        @update:expanded-keys="handleMenuExpand"
+        @update:value="handleMenuItemClick"
       />
     </SimpleScrollbar>
   </Teleport>
