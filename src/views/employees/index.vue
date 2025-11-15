@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { h, onMounted, reactive, ref, watch } from 'vue';
+import { h, onMounted, reactive, ref, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { DataTableColumns } from 'naive-ui';
-import { NButton, NPopconfirm, NSpace } from 'naive-ui';
+import { NButton, NPopconfirm, NSpace, NInputNumber, NInput, NDatePicker, NSelect, NForm, NFormItemGi, NGrid, NCard, NDataTable, NPagination } from 'naive-ui';
 import dayjs from 'dayjs';
 import { delEmployee, fetchEmployeesList } from '@/service/api/employee';
-import { cleanObj } from '@/utils/common';
 
 // 用户数据接口定义
 interface UserData {
@@ -22,11 +21,16 @@ const router = useRouter();
 
 // 搜索表单数据
 const searchForm = ref({
-  emp_no: '',
-  birth_date: null,
-  hire_date: null,
+  emp_no_min: null,
+  emp_no_max: null,
+  birth_date_range: null,
+  hire_date_range: null,
   name: '',
-  gender: 'M'
+  gender: '',
+  salary_min: null,
+  salary_max: null,
+  dept_name: '',
+  title: ''
 });
 
 const userData = ref<any[]>([]);
@@ -34,17 +38,32 @@ const userData = ref<any[]>([]);
 // 分页数据
 const pagination = reactive({
   page: 1,
-  pageSize: 10,
-  'item-count': 99
+  pageSize: 10, // Fixed at 10 per page
+  'item-count': 0
 });
 
 // 加载状态
 const loading = ref(false);
 
+// Page jump input
+const jumpPageInput = ref<number | null>(1);
+
+// Calculate max page
+const maxPage = computed(() => {
+  const total = pagination['item-count'];
+  if (total === 0) return 1;
+  return Math.ceil(total / pagination.pageSize);
+});
+
 // 表格列配置
 const columns: DataTableColumns<UserData> = [
   {
-    title: 'name',
+    title: 'Employee ID',
+    key: 'emp_no',
+    width: 100
+  },
+  {
+    title: 'Employee Name',
     key: 'name',
     width: 180,
     render: row => {
@@ -52,27 +71,22 @@ const columns: DataTableColumns<UserData> = [
     }
   },
   {
-    title: 'emp_no',
-    key: 'emp_no',
-    width: 100
-  },
-  {
-    title: 'birth_date',
+    title: 'Birth Date',
     key: 'birth_date',
     width: 140
   },
   {
-    title: 'dept_name',
+    title: 'Dept Name',
     key: 'dept_name',
     width: 180
   },
   {
-    title: 'title',
+    title: 'Title',
     key: 'title',
     width: 180
   },
   {
-    title: 'salary',
+    title: 'Salary',
     key: 'salary',
     width: 100,
     render: row => {
@@ -80,24 +94,18 @@ const columns: DataTableColumns<UserData> = [
     }
   },
   {
-    title: 'hire_date',
+    title: 'Hire Date',
     key: 'hire_date',
     width: 140
   },
   {
-    title: 'gender',
+    title: 'Gender',
     key: 'gender',
     width: 120,
     render: row => {
       return row.gender === 'M' ? 'male' : 'female';
     }
   },
-
-  // {
-  //   title: '创建时间',
-  //   key: 'createTime',
-  //   width: 180
-  // },
   {
     title: 'Operation',
     key: 'actions',
@@ -178,6 +186,7 @@ async function handleDelete(row: UserData) {
 // 搜索用户
 function handleSearch() {
   console.log('搜索条件:', searchForm);
+  pagination.page = 1; // Reset to page 1 when searching
   search();
   // 实现搜索功能
 }
@@ -195,31 +204,133 @@ function handleAdd() {
   // 实现新增功能
 }
 
+// Jump to specific page
+function handleJumpToPage() {
+  const page = jumpPageInput.value;
+  if (!page || page < 1) {
+    window.$message?.warning('Please enter a valid page number');
+    jumpPageInput.value = pagination.page;
+    return;
+  }
+  
+  const max = maxPage.value;
+  if (page > max) {
+    window.$message?.warning(`Page number cannot exceed ${max}`);
+    jumpPageInput.value = pagination.page;
+    return;
+  }
+  
+  pagination.page = page;
+  // search() will be triggered by the watch on pagination.page
+}
+
 function doReset() {
   searchForm.value = {
-    emp_no: '',
-    birth_date: null,
-    hire_date: null,
+    emp_no_min: null,
+    emp_no_max: null,
+    birth_date_range: null,
+    hire_date_range: null,
     name: '',
-    gender: ''
+    gender: '',
+    salary_min: null,
+    salary_max: null,
+    dept_name: '',
+    title: ''
   };
 }
 
-function search() {
-  // let params: any = Object.assign(searchForm.value, pagination);
-  let params: any = {
-    ...searchForm.value,
-    ...pagination,
-    birth_date: searchForm.value.birth_date ? dayjs(searchForm.value.birth_date).format('YYYY-MM-DD') : undefined,
-    hire_date: searchForm.value.hire_date ? dayjs(searchForm.value.hire_date).format('YYYY-MM-DD') : undefined
-  };
+async function search() {
+  loading.value = true;
+  try {
+    // Prepare search params - ensure page and pageSize are always present (required by backend)
+    const searchParams: any = {
+      page: pagination.page || 1,
+      pageSize: pagination.pageSize || 10
+    };
 
-  delete params['item-count'];
-  params = cleanObj(params);
-  fetchEmployeesList(params).then((res: any) => {
-    userData.value = res.data;
-    // pagination['item-count'] = res.total;
-  });
+    // Add optional search filters - Range searches
+    if (searchForm.value.emp_no_min !== null && searchForm.value.emp_no_min !== '') {
+      searchParams.emp_no_min = parseInt(searchForm.value.emp_no_min);
+    }
+    if (searchForm.value.emp_no_max !== null && searchForm.value.emp_no_max !== '') {
+      searchParams.emp_no_max = parseInt(searchForm.value.emp_no_max);
+    }
+    // Handle birth date range
+    if (searchForm.value.birth_date_range) {
+      const [fromTs, toTs] = searchForm.value.birth_date_range as [number, number];
+      if (fromTs) {
+        searchParams.birth_date_min = dayjs(fromTs).format('YYYY-MM-DD');
+      }
+      if (toTs) {
+        searchParams.birth_date_max = dayjs(toTs).format('YYYY-MM-DD');
+      }
+    }
+    // Handle hire date range
+    if (searchForm.value.hire_date_range) {
+      const [fromTs, toTs] = searchForm.value.hire_date_range as [number, number];
+      if (fromTs) {
+        searchParams.hire_date_min = dayjs(fromTs).format('YYYY-MM-DD');
+      }
+      if (toTs) {
+        searchParams.hire_date_max = dayjs(toTs).format('YYYY-MM-DD');
+      }
+    }
+    if (searchForm.value.salary_min !== null && searchForm.value.salary_min !== '') {
+      searchParams.salary_min = parseInt(searchForm.value.salary_min);
+    }
+    if (searchForm.value.salary_max !== null && searchForm.value.salary_max !== '') {
+      searchParams.salary_max = parseInt(searchForm.value.salary_max);
+    }
+    // Exact/Fuzzy searches
+    if (searchForm.value.name) {
+      searchParams.name = searchForm.value.name;
+    }
+    if (searchForm.value.gender) {
+      searchParams.gender = searchForm.value.gender;
+    }
+    if (searchForm.value.dept_name) {
+      searchParams.dept_name = searchForm.value.dept_name;
+    }
+    if (searchForm.value.title) {
+      searchParams.title = searchForm.value.title;
+    }
+    
+    const res = await fetchEmployeesList(searchParams);
+    if (res && res.data) {
+      userData.value = res.data;
+      // Update total count for pagination
+      // Since backend doesn't return total, estimate based on current page
+      if (res.total !== undefined) {
+        pagination['item-count'] = res.total;
+      } else if (Array.isArray(res.data)) {
+        if (res.data.length < pagination.pageSize) {
+          // Last page - exact count
+          pagination['item-count'] = (pagination.page - 1) * pagination.pageSize + res.data.length;
+        } else {
+          // Full page - assume there are at least 10 pages (100 records) to enable jump functionality
+          const estimatedTotal = Math.max(100, pagination.page * pagination.pageSize + 1);
+          pagination['item-count'] = estimatedTotal;
+        }
+      }
+    } else {
+      userData.value = [];
+      pagination['item-count'] = 0;
+      // Don't show warning on initial load with no filters
+      const hasFilters = searchForm.value.name || searchForm.value.emp_no_min || searchForm.value.emp_no_max ||
+                        searchForm.value.birth_date_range || searchForm.value.hire_date_range ||
+                        searchForm.value.gender || searchForm.value.salary_min || searchForm.value.salary_max ||
+                        searchForm.value.dept_name || searchForm.value.title;
+      if (hasFilters) {
+        window.$message?.warning('No data found');
+      }
+    }
+  } catch (err: any) {
+    console.error('Search error:', err);
+    window.$message?.error(err?.message || 'Failed to fetch employees');
+    userData.value = [];
+  } finally {
+    loading.value = false;
+  }
 }
 
 // 页面挂载时加载数据
@@ -230,8 +341,11 @@ onMounted(() => {
 });
 
 watch(
-  () => [pagination.page, pagination.pageSize, searchForm.value],
-  () => {
+  () => pagination.page,
+  (newPage) => {
+    // Update jump input when page changes
+    jumpPageInput.value = newPage;
+    // Trigger search when page changes
     search();
   }
 );
@@ -241,32 +355,50 @@ watch(
   <div class="user-management">
     <!-- 搜索表单 -->
     <NCard title="Search Conditions" class="mb-4">
-      <NForm :model="searchForm" label-placement="left" label-width="80px" class="search-form">
-        <NGrid :cols="4" :x-gap="16">
-          <NFormItemGi label="name">
-            <NInput v-model:value="searchForm.name" clearable />
+      <NForm :model="searchForm" label-placement="left" label-width="130px" class="search-form">
+        <NGrid :cols="4" :x-gap="16" :y-gap="16">
+          <NFormItemGi label="Employee Name" :span="1">
+            <NInput v-model:value="searchForm.name" clearable placeholder="Please Input" />
           </NFormItemGi>
-          <NFormItemGi label="emp_no">
-            <NInput v-model:value="searchForm.emp_no" clearable />
+          <NFormItemGi label="Employee ID Min" :span="1">
+            <NInputNumber v-model:value="searchForm.emp_no_min" clearable placeholder="Min" :show-button="false" style="width: 100%" />
           </NFormItemGi>
-          <NFormItemGi label="birth_date">
-            <NDatePicker v-model:value="searchForm.birth_date" type="date" clearable />
+          <NFormItemGi label="Employee ID Max" :span="1">
+            <NInputNumber v-model:value="searchForm.emp_no_max" clearable placeholder="Max" :show-button="false" style="width: 100%" />
           </NFormItemGi>
-          <NFormItemGi label="hire_date">
-            <NDatePicker v-model:value="searchForm.hire_date" type="date" clearable />
-          </NFormItemGi>
-
-          <NFormItemGi label="gender">
+          <NFormItemGi label="Gender" :span="1">
             <NSelect
               v-model:value="searchForm.gender"
               clearable
+              placeholder="Please Select"
               :options="[
                 { label: 'Male', value: 'M' },
                 { label: 'Female', value: 'F' }
               ]"
             />
           </NFormItemGi>
-          <NFormItemGi>
+
+          <NFormItemGi label="Birth Date Range" :span="1">
+            <NDatePicker v-model:value="searchForm.birth_date_range" type="daterange" clearable placeholder="Select Date Range" style="width: 100%" />
+          </NFormItemGi>
+          <NFormItemGi label="Hire Date Range" :span="1">
+            <NDatePicker v-model:value="searchForm.hire_date_range" type="daterange" clearable placeholder="Select Date Range" style="width: 100%" />
+          </NFormItemGi>
+
+          <NFormItemGi label="Salary Min" :span="1">
+            <NInputNumber v-model:value="searchForm.salary_min" clearable placeholder="Min" :show-button="false" style="width: 100%" />
+          </NFormItemGi>
+          <NFormItemGi label="Salary Max" :span="1">
+            <NInputNumber v-model:value="searchForm.salary_max" clearable placeholder="Max" :show-button="false" style="width: 100%" />
+          </NFormItemGi>
+          <NFormItemGi label="Dept Name" :span="1">
+            <NInput v-model:value="searchForm.dept_name" clearable placeholder="Please Input" />
+          </NFormItemGi>
+          <NFormItemGi label="Title" :span="1">
+            <NInput v-model:value="searchForm.title" clearable placeholder="Please Input" />
+          </NFormItemGi>
+
+          <NFormItemGi :span="4">
             <NSpace>
               <NButton type="primary" @click="handleSearch">
                 <template #icon>
@@ -305,13 +437,27 @@ watch(
         :single-line="false"
         class="user-table"
       />
-      <NPagination
-        v-model:page="pagination.page"
-        v-model:page-size="pagination.pageSize"
-        :item-count="pagination['item-count']"
-        :page-sizes="[10, 20, 30, 40]"
-        show-size-picker
-      />
+      <div class="flex items-center gap-4 mt-4">
+        <NPagination
+          v-model:page="pagination.page"
+          :page-size="pagination.pageSize"
+          :item-count="pagination['item-count']"
+          :show-size-picker="false"
+        />
+        <div class="flex items-center gap-2">
+          <span class="text-sm">Jump to:</span>
+          <NInputNumber
+            v-model:value="jumpPageInput"
+            :min="1"
+            :max="maxPage"
+            :show-button="false"
+            size="small"
+            style="width: 80px"
+            @keyup.enter="handleJumpToPage"
+          />
+          <NButton size="small" @click="handleJumpToPage">Go</NButton>
+        </div>
+      </div>
     </NCard>
   </div>
 </template>
@@ -323,6 +469,15 @@ watch(
 
 .search-form {
   margin-bottom: 16px;
+}
+
+.search-form :deep(.n-form-item-label) {
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.search-form :deep(.n-form-item-label__text) {
+  white-space: nowrap;
 }
 
 .user-table {

@@ -27,6 +27,7 @@ const local: App.I18n.Schema = {
     error: 'Error',
     index: 'Index',
     keywordSearch: 'Please enter keyword',
+    loading: 'Data is coming, please wait...',
     logout: 'Logout',
     logoutConfirm: 'Are you sure you want to log out?',
     lookForward: 'Coming soon',

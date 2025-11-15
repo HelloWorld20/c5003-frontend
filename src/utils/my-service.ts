@@ -4,7 +4,7 @@ import axios, { type AxiosRequestConfig } from 'axios';
  * 创建 axios 请求实例
  * @returns axios 实例
  */
-const createReqeust = () => {
+const createRequest = () => {
   const service = axios.create({
     baseURL: 'http://localhost:8000'
   });
@@ -14,22 +14,35 @@ const createReqeust = () => {
       if (response.status === 200) {
         return response.data;
       }
-      throw new Error('somethimg went wrong!');
+      throw new Error('Something went wrong!');
     },
     err => {
-      console.log('%c [ err ]-15', 'font-size:13px; background:pink; color:#bf2c9f;', err);
-      if (err.status !== 200) {
-        return Promise.reject(err.response?.data?.detail);
-        // return err.response.data.detail;
+      console.error('Request error:', err);
+      if (err.response) {
+        // Server responded with error status
+        const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message;
+        console.error('Error response:', {
+          status: err.response.status,
+          data: err.response.data,
+          message: errorMessage
+        });
+        return Promise.reject(new Error(errorMessage));
+      } else if (err.request) {
+        // Request was made but no response received
+        console.error('No response received:', err.request);
+        return Promise.reject(new Error('Network error: No response from server. Please check if the backend is running.'));
+      } else {
+        // Error setting up the request
+        console.error('Request setup error:', err.message);
+        return Promise.reject(err);
       }
-      return err;
     }
   );
 
   return service;
 };
 
-const service = createReqeust();
+const service = createRequest();
 
 export const request = (config: AxiosRequestConfig) => {
   return service(config);

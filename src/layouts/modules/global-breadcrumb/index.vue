@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { createReusableTemplate } from '@vueuse/core';
 import type { RouteKey } from '@elegant-router/types';
 import { useThemeStore } from '@/store/modules/theme';
@@ -22,6 +23,19 @@ const [DefineBreadcrumbContent, BreadcrumbContent] = createReusableTemplate<Brea
 function handleClickMenu(key: RouteKey) {
   routerPushByKey(key);
 }
+
+// Filter out breadcrumb items without labels and the Home item
+const filteredBreadcrumbs = computed(() => {
+  return routeStore.breadcrumbs.filter(item => {
+    // Remove the Home breadcrumb item
+    if (item.key === 'home') {
+      return false;
+    }
+    // Remove items that don't have a label or have an empty label
+    const label = typeof item.label === 'string' ? item.label : '';
+    return label && label.trim().length > 0;
+  });
+});
 </script>
 
 <template>
@@ -35,7 +49,7 @@ function handleClickMenu(key: RouteKey) {
     </DefineBreadcrumbContent>
     <!-- define component end: BreadcrumbContent -->
 
-    <NBreadcrumbItem v-for="item in routeStore.breadcrumbs" :key="item.key">
+    <NBreadcrumbItem v-for="item in filteredBreadcrumbs" :key="item.key">
       <NDropdown v-if="item.options?.length" :options="item.options" @select="handleClickMenu">
         <BreadcrumbContent :breadcrumb="item" />
       </NDropdown>

@@ -1,6 +1,6 @@
 /** Default theme settings */
 export const themeSettings: App.Theme.ThemeSetting = {
-  themeScheme: 'light',
+  themeScheme: 'dark',
   grayscale: false,
   colourWeakness: false,
   recommendColor: false,
@@ -32,7 +32,7 @@ export const themeSettings: App.Theme.ThemeSetting = {
       visible: true
     },
     globalSearch: {
-      visible: true
+      visible: false
     }
   },
   tab: {

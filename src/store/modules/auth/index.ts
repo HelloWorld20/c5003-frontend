@@ -46,9 +46,8 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
 
     authStore.$reset();
 
-    if (!route.meta.constant) {
-      await toLogin();
-    }
+    // Always redirect to login page on logout
+    await toLogin();
 
     tabStore.cacheTabs();
     routeStore.resetStore();
@@ -105,15 +104,8 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
       const pass = await loginByToken(loginToken);
 
       if (pass) {
-        // Check if the tab needs to be cleared
-        const isClear = checkTabClear();
-        let needRedirect = redirect;
-
-        if (isClear) {
-          // If the tab needs to be cleared,it means we don't need to redirect.
-          needRedirect = false;
-        }
-        await redirectFromLogin(needRedirect);
+        // Always redirect after successful login
+        await redirectFromLogin(redirect);
 
         window.$notification?.success({
           title: $t('page.login.common.loginSuccess'),

@@ -35,7 +35,7 @@ const headerProps = computed(() => {
     vertical: {
       showLogo: false,
       showMenu: false,
-      showMenuToggler: true
+      showMenuToggler: false
     },
     'vertical-mix': {
       showLogo: false,

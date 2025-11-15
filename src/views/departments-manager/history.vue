@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import type { DataTableColumns } from 'naive-ui';
 import { NButton, NPopconfirm, NSpace, NInputNumber, NForm, NFormItemGi, NGrid, NCard, NDataTable, NPagination, NInput, NDatePicker } from 'naive-ui';
 import dayjs from 'dayjs';
-import { delDepartment, fetchDepartmentList } from '@/service/api/department-manage';
+import { fetchDepartmentListAll } from '@/service/api/department-manage';
 import { cleanObj } from '@/utils/common';
 
 // 用户数据接口定义
@@ -20,10 +20,8 @@ const router = useRouter();
 // 搜索表单数据
 const searchForm = ref({
   Employee_ID: '',
-  // birth_date: null,
   Dept_Number: '',
   Date: null
-  // gender: 'M'
 });
 
 const tableData = ref<any[]>([]);
@@ -69,101 +67,20 @@ const columns: DataTableColumns<UserData> = [
     title: 'To Date',
     key: 'to_date',
     width: 140
-  },
-  {
-    title: 'Operation',
-    key: 'actions',
-    width: 150,
-    fixed: 'right',
-    render: (row: UserData) => {
-      return h(
-        NSpace,
-        {},
-        {
-          default: () => [
-            h(
-              NButton,
-              {
-                size: 'small',
-                type: 'primary',
-                onClick: () => handleEdit(row)
-              },
-              {
-                default: () => 'Edit'
-              }
-            ),
-            h(
-              NPopconfirm,
-              {
-                onPositiveClick: () => handleDelete(row)
-              },
-              {
-                trigger: () =>
-                  h(
-                    NButton,
-                    {
-                      size: 'small',
-                      type: 'error'
-                    },
-                    {
-                      default: () => 'Delete'
-                    }
-                  ),
-                default: () => 'Are you sure to delete this department manager?'
-              }
-            )
-          ]
-        }
-      );
-    }
   }
 ];
 
-// 编辑用户
-function handleEdit(row: UserData) {
-  console.log('Edit department manager:', row);
-  router.push({
-    path: '/departments-manager/detail',
-    query: {
-      emp_no: row.emp_no,
-      dept_no: row.dept_no,
-      from_date: row.from_date,
-      to_date: row.to_date
-    }
-  });
-}
-
-// 删除用户
-async function handleDelete(row: UserData) {
-  try {
-    await delDepartment({ emp_no: row.emp_no, dept_no: row.dept_no });
-    search();
-    window.$message?.success('Delete successful');
-  } catch (err: any) {
-    console.error('Delete error:', err);
-    window.$message?.error(err?.message || 'Delete failed');
-  }
-}
-
 // 搜索用户
 function handleSearch() {
-  console.log('搜索条件:', searchForm);
+  console.log('Search conditions:', searchForm);
   pagination.Page_Number = 1; // Reset to page 1 when searching
   search();
-  // 实现搜索功能
 }
 
 // 重置搜索
 function handleReset() {
   doReset();
   search();
-}
-
-// 新增用户
-function handleAdd() {
-  console.log('新增用户');
-  router.push('/departments-manager/detail');
-  // 实现新增功能
 }
 
 // Jump to specific page
@@ -195,6 +112,7 @@ function doReset() {
 }
 
 function search() {
+  loading.value = true;
   let params: any = {
     ...searchForm.value,
     Page_Number: pagination.Page_Number || 1,
@@ -208,7 +126,7 @@ function search() {
   }
 
   params = cleanObj(params);
-  fetchDepartmentList(params).then((res: any) => {
+  fetchDepartmentListAll(params).then((res: any) => {
     if (Array.isArray(res)) {
       tableData.value = res;
       // Update total count for pagination
@@ -217,7 +135,6 @@ function search() {
         pagination['item-count'] = (pagination.Page_Number - 1) * pagination.Row_Count + res.length;
       } else {
         // Full page - try to determine actual total by checking a high page number
-        // First, estimate based on current page, but also check if there are more pages
         checkTotalCount(params).then((total) => {
           if (total !== null) {
             pagination['item-count'] = total;
@@ -256,8 +173,11 @@ function search() {
     }
   }).catch((err: any) => {
     console.error('Search error:', err);
+    window.$message?.error(err?.message || 'Failed to fetch manager history');
     tableData.value = [];
     pagination['item-count'] = 0;
+  }).finally(() => {
+    loading.value = false;
   });
 }
 
@@ -266,16 +186,15 @@ async function checkTotalCount(params: any): Promise<number | null> {
   try {
     // Try page 10 first (100 records)
     const testParams = { ...params, Page_Number: 10, Row_Count: pagination.Row_Count };
-    const testRes = await fetchDepartmentList(testParams);
+    const testRes = await fetchDepartmentListAll(testParams);
     const testData = Array.isArray(testRes) ? testRes : (testRes?.data || []);
     
     if (testData.length === 0) {
       // Page 10 is empty, so total is less than 100
-      // Try to find the last page by binary search or sequential check
-      // For simplicity, check pages 2-9 sequentially
+      // Try to find the last page by checking pages 2-9 sequentially
       for (let page = 9; page >= 2; page--) {
         const pageParams = { ...params, Page_Number: page, Row_Count: pagination.Row_Count };
-        const pageRes = await fetchDepartmentList(pageParams);
+        const pageRes = await fetchDepartmentListAll(pageParams);
         const pageData = Array.isArray(pageRes) ? pageRes : (pageRes?.data || []);
         
         if (pageData.length > 0) {
@@ -307,7 +226,8 @@ async function checkTotalCount(params: any): Promise<number | null> {
 // 页面挂载时加载数据
 onMounted(() => {
   // 初始化数据加载
-  handleReset();
+  pagination.Page_Number = 1;
+  doReset();
   search();
 });
 
@@ -361,16 +281,7 @@ watch(
     </NCard>
 
     <!-- 用户列表 -->
-    <NCard title="Current Department Managers">
-      <template #header-extra>
-        <NButton type="primary" @click="handleAdd">
-          <template #icon>
-            <icon-ic-round-add />
-          </template>
-          Add Manager
-        </NButton>
-      </template>
-
+    <NCard title="All Department Managers (Legacy)">
       <NDataTable
         :columns="columns"
         :data="tableData"
@@ -426,3 +337,4 @@ watch(
   margin-top: 16px;
 }
 </style>
+

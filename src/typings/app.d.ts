@@ -327,6 +327,7 @@ declare namespace App {
         error: string;
         index: string;
         keywordSearch: string;
+        loading: string;
         logout: string;
         logoutConfirm: string;
         lookForward: string;

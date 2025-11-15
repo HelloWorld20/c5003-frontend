@@ -50,7 +50,8 @@ export function useRouterPush(inSetup = true) {
   }
 
   async function toHome() {
-    return routerPushByKey('root');
+    // Redirect directly to /home path to avoid route initialization issues
+    return routerPush('/home');
   }
 
   /**
@@ -61,20 +62,16 @@ export function useRouterPush(inSetup = true) {
    */
   async function toLogin(loginModule?: UnionKey.LoginModule, redirectUrl?: string) {
     const module = loginModule || 'pwd-login';
-
-    const options: App.Global.RouterPushOptions = {
-      params: {
-        module
-      }
-    };
-
     const redirect = redirectUrl || route.value.fullPath;
 
-    options.query = {
-      redirect
-    };
-
-    return routerPushByKey('login', options);
+    // Redirect directly to login path to avoid route initialization issues
+    const loginPath = `/login/${module}`;
+    const query = redirect ? { redirect } : {};
+    
+    return routerPush({
+      path: loginPath,
+      query
+    });
   }
 
   /**

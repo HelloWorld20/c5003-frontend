@@ -1,29 +1,32 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { NButton, NCard, NForm, NFormItemGi, NGrid, NInput, useMessage } from 'naive-ui';
-import { addTitle, updateTitle } from '@/service/api/titles';
+import { NButton, NCard, NForm, NFormItemGi, NGrid, NInput, NDatePicker, useMessage } from 'naive-ui';
+import { addDepartment, updateDepartment } from '@/service/api/department-manage';
+import dayjs from 'dayjs';
 
-defineOptions({ name: 'TitleDetail' });
+defineOptions({ name: 'DepartmentManagerDetail' });
 
 const route = useRoute();
 const router = useRouter();
 const message = useMessage();
 
-// 获取路由参数中的标题信息
-// 示例：emp_no=10002&title=Staff&from_date=1996-08-03&to_date=9999-01-01
-const { emp_no, dept_no } = route.query;
+// Get route parameters for department manager information
+// Example: emp_no=10001&dept_no=d001&from_date=1996-08-03&to_date=9999-01-01
+const { emp_no, dept_no, from_date, to_date } = route.query;
 
-// 表单数据（日期存储为时间戳，便于与 NDatePicker 绑定）
+// Form data (dates stored as timestamps for NDatePicker binding)
 const formData = reactive({
   emp_no: (emp_no as string) || '',
-  dept_no: (dept_no as string) || ''
+  dept_no: (dept_no as string) || '',
+  from_date: from_date ? dayjs(from_date as string).valueOf() : null,
+  to_date: to_date ? dayjs(to_date as string).valueOf() : null
 });
 
 // Form reference
 const formRef = ref();
 
-// 表单校验规则（日期字段为 number 类型）
+// Form validation rules
 const rules: any = {
   emp_no: {
     required: true,
@@ -34,54 +37,83 @@ const rules: any = {
     required: true,
     message: 'Please enter department number',
     trigger: 'blur'
+  },
+  from_date: {
+    required: true,
+    type: 'number',
+    message: 'Please select from date',
+    trigger: ['blur', 'change']
   }
 };
 
 /**
- * 提交表单：如果存在 emp_no（编辑模式），则调用更新接口；否则调用新增接口
+ * Submit form: if emp_no and dept_no exist (edit mode), call update API; otherwise call add API
  */
 const handleSubmit = () => {
   formRef.value?.validate((errors: any) => {
     if (!errors) {
-      // 组装提交参数（将时间戳转为 yyyy-MM-dd）
-      const payload = {
-        emp_no: formData.emp_no,
-        dept_no: formData.dept_no
+      // Validate that from_date is provided
+      if (!formData.from_date) {
+        message.error('Please select from date');
+        return;
+      }
+
+      // Prepare payload (convert timestamps to yyyy-MM-dd format)
+      const payload: any = {
+        emp_no: parseInt(formData.emp_no),
+        dept_no: formData.dept_no,
+        from_date: dayjs(formData.from_date).format('YYYY-MM-DD')
       };
 
-      if (formData.emp_no) {
-        // 更新标题信息
-        updateTitle(payload).then(() => {
-          message.success('Title updated successfully!');
-          // router.push('/titles');
+      // to_date is optional, only include if provided
+      if (formData.to_date) {
+        payload.to_date = dayjs(formData.to_date).format('YYYY-MM-DD');
+      }
+
+      const isEditMode = emp_no && dept_no;
+
+      if (isEditMode) {
+        // Update department manager information
+        updateDepartment(payload).then(() => {
+          message.success('Department manager updated successfully!');
+          router.push('/departments-manager');
+        }).catch((err: any) => {
+          console.error('Update error:', err);
+          message.error(err?.message || err?.response?.data?.detail || 'Failed to update department manager');
         });
       } else {
-        // 新增标题信息
-        addTitle(payload).then(() => {
-          message.success('Title added successfully!');
-          // router.push('/titles');
+        // Add new department manager
+        addDepartment(payload).then(() => {
+          message.success('Department manager added successfully!');
+          router.push('/departments-manager');
+        }).catch((err: any) => {
+          console.error('Add error:', err);
+          message.error(err?.message || err?.response?.data?.detail || 'Failed to add department manager');
         });
       }
     } else {
+      console.error('Validation errors:', errors);
       message.error('Please check the form information');
     }
   });
 };
 
 /**
- * 重置表单：恢复到路由入参的初始值
+ * Reset form: restore to initial values from route parameters
  */
 const handleReset = () => {
   formRef.value?.restoreValidation();
-  // 重置为初始值
+  // Reset to initial values
   Object.assign(formData, {
     emp_no: (emp_no as string) || '',
-    dept_no: (dept_no as string) || ''
+    dept_no: (dept_no as string) || '',
+    from_date: from_date ? dayjs(from_date as string).valueOf() : null,
+    to_date: to_date ? dayjs(to_date as string).valueOf() : null
   });
 };
 
 /**
- * 返回列表页
+ * Return to list page
  */
 const handleBack = () => {
   router.push('/departments-manager');
@@ -112,7 +144,32 @@ const handleBack = () => {
 
           <!-- Department Number -->
           <NFormItemGi label="Department Number" path="dept_no">
-            <NInput v-model:value="formData.dept_no" placeholder="Please enter department number" class="w-full" />
+            <NInput
+              v-model:value="formData.dept_no"
+              placeholder="Please enter department number"
+              :disabled="!!dept_no"
+              class="w-full"
+            />
+          </NFormItemGi>
+
+          <!-- From Date -->
+          <NFormItemGi label="From Date" path="from_date">
+            <NDatePicker
+              v-model:value="formData.from_date"
+              type="date"
+              placeholder="Select from date"
+              style="width: 100%"
+            />
+          </NFormItemGi>
+
+          <!-- To Date (Optional) -->
+          <NFormItemGi label="To Date" path="to_date">
+            <NDatePicker
+              v-model:value="formData.to_date"
+              type="date"
+              placeholder="Select to date (optional, defaults to 9999-01-01)"
+              style="width: 100%"
+            />
           </NFormItemGi>
         </NGrid>
 

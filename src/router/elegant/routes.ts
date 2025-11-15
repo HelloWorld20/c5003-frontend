@@ -66,7 +66,8 @@ export const routes: RouteRecordRaw[] = [
         path: 'home_sql',
         component: () => import('@/views/home/sql.vue'),
         meta: {
-          title: 'home_sql'
+          title: 'home_sql',
+          hideInMenu: true
         }
       }
     ],
@@ -111,11 +112,20 @@ export const routes: RouteRecordRaw[] = [
         meta: {
           title: 'employees_detail'
         }
+      },
+      {
+        name: 'employees_history',
+        path: 'history',
+        component: () => import('@/views/employees/history.vue'),
+        meta: {
+          title: 'Employee History'
+        }
       }
     ],
     meta: {
-      title: 'employees',
-      i18nKey: 'route.manage'
+      title: 'Current Employees',
+      icon: 'mdi:account-group',
+      order: 2
     }
   },
   {
@@ -137,8 +147,9 @@ export const routes: RouteRecordRaw[] = [
       }
     ],
     meta: {
-      title: 'titles',
-      i18nKey: 'route.manage'
+      title: 'Titles',
+      icon: 'mdi:briefcase',
+      order: 3
     }
   },
   {
@@ -160,8 +171,9 @@ export const routes: RouteRecordRaw[] = [
       }
     ],
     meta: {
-      title: 'departments',
-      i18nKey: 'route.manage'
+      title: 'Departments',
+      icon: 'mdi:office-building',
+      order: 4
     }
   },
   {
@@ -174,6 +186,14 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/views/departments-manager/index.vue')
       },
       {
+        name: 'departments_manager_history',
+        path: 'history',
+        component: () => import('@/views/departments-manager/history.vue'),
+        meta: {
+          title: 'Manager History'
+        }
+      },
+      {
         name: 'departments_manager_detail',
         path: 'detail',
         component: () => import('@/views/departments-manager/detail.vue'),
@@ -183,8 +203,9 @@ export const routes: RouteRecordRaw[] = [
       }
     ],
     meta: {
-      title: 'departments_manager',
-      i18nKey: 'route.manage'
+      title: 'Departments Manager',
+      icon: 'mdi:account-tie',
+      order: 5
     }
   },
   {
@@ -206,8 +227,9 @@ export const routes: RouteRecordRaw[] = [
       }
     ],
     meta: {
-      title: 'departments_employees',
-      i18nKey: 'route.manage'
+      title: 'Departments Employees',
+      icon: 'mdi:account-multiple',
+      order: 6
     }
   },
   {
@@ -229,8 +251,9 @@ export const routes: RouteRecordRaw[] = [
       }
     ],
     meta: {
-      title: 'salaries',
-      i18nKey: 'route.manage'
+      title: 'Salaries',
+      icon: 'mdi:currency-usd',
+      order: 7
     }
   },
   {
@@ -255,7 +278,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'current-employee-per-department',
         component: () => import('@/views/charts/current-employee-per-department.vue'),
         meta: {
-          title: 'charts_current_employee_per_department'
+          title: 'Employee Number'
         }
       },
       {
@@ -263,7 +286,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'salary-title',
         component: () => import('@/views/charts/salary-title.vue'),
         meta: {
-          title: 'charts_salary_title'
+          title: 'Salary by Title'
         }
       },
       {
@@ -271,7 +294,7 @@ export const routes: RouteRecordRaw[] = [
         path: 'gender-role',
         component: () => import('@/views/charts/gender-role.vue'),
         meta: {
-          title: 'charts_gender_role'
+          title: 'Gender Diversity'
         }
       },
       {
@@ -279,13 +302,14 @@ export const routes: RouteRecordRaw[] = [
         path: 'distribution',
         component: () => import('@/views/charts/distribution.vue'),
         meta: {
-          title: 'charts_distribution'
+          title: 'Tenure Distribution'
         }
       }
     ],
     meta: {
-      title: 'charts',
-      i18nKey: 'route.manage'
+      title: 'Charts',
+      icon: 'mdi:chart-line',
+      order: 8
     }
   }
 ];

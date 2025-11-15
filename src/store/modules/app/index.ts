@@ -52,7 +52,7 @@ export const useAppStore = defineStore(SetupStoreId.App, () => {
     }
   }
 
-  const locale = ref<App.I18n.LangType>(localStg.get('lang') || 'zh-CN');
+  const locale = ref<App.I18n.LangType>(localStg.get('lang') || 'en-US');
 
   const localeOptions: App.I18n.LangOption[] = [
     {
@@ -73,15 +73,15 @@ export const useAppStore = defineStore(SetupStoreId.App, () => {
 
   /** Update document title by locale */
   function updateDocumentTitleByLocale() {
-    const { i18nKey, title } = router.currentRoute.value.meta;
-
-    const documentTitle = i18nKey ? $t(i18nKey) : title;
-
+    // Use locale-specific title: English or Chinese
+    const documentTitle = locale.value === 'zh-CN' ? '人力資源系統' : 'HR Management System';
     useTitle(documentTitle);
   }
 
   function init() {
     setDayjsLocale(locale.value);
+    // Set initial document title based on locale
+    updateDocumentTitleByLocale();
   }
 
   // watch store
@@ -117,19 +117,23 @@ export const useAppStore = defineStore(SetupStoreId.App, () => {
     );
 
     // watch locale
-    watch(locale, () => {
-      // update document title by locale
-      updateDocumentTitleByLocale();
+    watch(
+      locale,
+      () => {
+        // update document title by locale
+        updateDocumentTitleByLocale();
 
-      // update global menus by locale
-      routeStore.updateGlobalMenusByLocale();
+        // update global menus by locale
+        routeStore.updateGlobalMenusByLocale();
 
-      // update tabs by locale
-      tabStore.updateTabsByLocale();
+        // update tabs by locale
+        tabStore.updateTabsByLocale();
 
-      // set dayjs locale
-      setDayjsLocale(locale.value);
-    });
+        // set dayjs locale
+        setDayjsLocale(locale.value);
+      },
+      { immediate: true }
+    );
   });
 
   // cache mixSiderFixed

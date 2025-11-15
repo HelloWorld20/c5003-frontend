@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, h, ref, watch } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { NIcon } from 'naive-ui';
 import { SimpleScrollbar } from '@sa/materials';
 import { BookOutline as BookIcon } from '@vicons/ionicons5';
@@ -50,7 +50,15 @@ function handleMenuExpand(keys: string[]) {
   expandedKeys.value = keys;
 }
 
+const router = useRouter();
+
 function handleMenuItemClick(key: any) {
+  // Handle Home menu item specially - navigate directly to /home
+  if (key === 'home') {
+    router.push('/home');
+    return;
+  }
+
   routerPushByKeyWithMetaQuery(key);
 
   // 点击子菜单项时，保持父菜单的展开状态
@@ -63,22 +71,9 @@ function handleMenuItemClick(key: any) {
 
 const menuOptions = [
   {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: '/home'
-        },
-        { default: () => 'Home' }
-      ),
-    key: '1',
+    label: 'Home',
+    key: 'home',
     icon: renderIcon(BookIcon)
-    // children: [
-    //   {
-    //     label: () => h(RouterLink, { to: '/home/home_sql' }, { default: () => 'SQL' }),
-    //     key: '11'
-    //   }
-    // ]
   },
   {
     label: 'Charts',
@@ -92,7 +87,7 @@ const menuOptions = [
             {
               to: '/charts/current-employee-per-department'
             },
-            { default: () => 'Current Employee per Department' }
+            { default: () => 'Employee Number' }
           ),
         key: '32'
       },
@@ -103,7 +98,7 @@ const menuOptions = [
             {
               to: '/charts/salary-title'
             },
-            { default: () => 'Salary Title' }
+            { default: () => 'Salary by Title' }
           ),
         key: '33'
       },
@@ -114,7 +109,7 @@ const menuOptions = [
             {
               to: '/charts/gender-role'
             },
-            { default: () => 'Gender Role' }
+            { default: () => 'Gender Diversity' }
           ),
         key: '34'
       },
@@ -125,7 +120,7 @@ const menuOptions = [
             {
               to: '/charts/distribution'
             },
-            { default: () => 'Distribution' }
+            { default: () => 'Tenure Distribution' }
           ),
         key: '35'
       }
@@ -143,16 +138,33 @@ const menuOptions = [
     ]
   },
   {
-    label: () =>
-      h(
-        RouterLink,
-        {
-          to: '/employees'
-        },
-        { default: () => 'Employees' }
-      ),
+    label: 'Employees',
     key: '2',
-    icon: renderIcon(BookIcon)
+    icon: renderIcon(BookIcon),
+    children: [
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/employees'
+            },
+            { default: () => 'Current Employees' }
+          ),
+        key: '21'
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/employees/history'
+            },
+            { default: () => 'Employee History' }
+          ),
+        key: '22'
+      }
+    ]
   },
 
   {
@@ -166,6 +178,35 @@ const menuOptions = [
       ),
     key: '4',
     icon: renderIcon(BookIcon)
+  },
+  {
+    label: 'Departments Manager',
+    key: '5',
+    icon: renderIcon(BookIcon),
+    children: [
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/departments-manager'
+            },
+            { default: () => 'Current Managers' }
+          ),
+        key: '51'
+      },
+      {
+        label: () =>
+          h(
+            RouterLink,
+            {
+              to: '/departments-manager/history'
+            },
+            { default: () => 'Manager History' }
+          ),
+        key: '52'
+      }
+    ]
   }
 ];
 
@@ -211,4 +252,21 @@ watch(
   </Teleport>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* Hide expand/collapse arrow icons for all menu items */
+:deep(.n-submenu-icon),
+:deep(.n-menu-item .n-submenu-icon) {
+  display: none !important;
+}
+
+/* Ensure menu items without children don't show expand icons */
+:deep(.n-menu-item:not(.n-submenu) .n-menu-item-content__icon),
+:deep(.n-menu-item:not(.n-submenu) .n-submenu-icon) {
+  display: none !important;
+}
+
+/* Hide any empty or default icons that might appear as hamburger bars */
+:deep(.n-menu-item-content__icon:empty) {
+  display: none !important;
+}
+</style>

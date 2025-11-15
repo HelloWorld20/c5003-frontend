@@ -30,3 +30,13 @@ export function fetchEmployeeById(emp_no: string | number) {
 export function homeVisualization() {
   return get('/home_vizs');
 }
+
+/**
+ * Get employee history/profile view
+ * 
+ * @param params Search parameters including Page_Number, Row_Count, and optional filters
+ * @returns Employee history data
+ */
+export function fetchEmployeeHistory(params: Record<string, any>) {
+  return get('/employees/view', params);
+}
