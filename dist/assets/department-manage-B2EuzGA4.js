@@ -1,0 +1,1 @@
+import{bZ as e,c9 as a,ca as n,cb as r}from"./index-Fa26LLGJ.js";function d(t){return e("/dept_manager/list",t)}function s(t){return e("/dept_manager/list/all",t)}function u(t){return a("/dept_manager/deletion",t)}function i(t){return r("/dept_manager/addition",t)}function m(t){return n("/dept_manager/update",t)}export{s as a,i as b,u as d,d as f,m as u};

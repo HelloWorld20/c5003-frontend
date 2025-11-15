@@ -1,1 +1,0 @@
-import{bX as e,ca as a,cb as n,cc as r}from"./index-CfpZo8w-.js";function s(t){return e("/dept/list",t)}function d(t){return a("/departments/deletion",{dept_no:t})}function u(t){return r("/departments/addition",t)}function i(t){return n("/departments/update",t)}function m(t){return e("/departments/detail",{Dept_ID:t})}export{u as a,d,s as f,m as g,i as u};

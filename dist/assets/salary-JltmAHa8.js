@@ -1,0 +1,1 @@
+import{bZ as t,c9 as r,ca as s,cb as n}from"./index-Fa26LLGJ.js";function l(a){return t("/salary/list",a)}function u(a){return r("/salary/deletion",{Employee_ID:a})}function d(a){return n("/salary/addition",a)}function i(a){return s("/salary/update",a)}export{d as a,u as d,l as f,i as u};

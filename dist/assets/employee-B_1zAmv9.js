@@ -1,0 +1,1 @@
+import{bZ as t,c9 as s,ca as n,cb as p}from"./index-Fa26LLGJ.js";function l(e){return t("/employees/list",e)}function u(e){return s(`/employees/${e}`)}function a(e){return p("/employees",e)}function m(e,o){return n(`/employees/${e}`,o)}function y(e){return t(`/employees/${e}`)}function c(e){return t("/employees/view",e)}export{y as a,a as b,c,u as d,l as f,m as u};

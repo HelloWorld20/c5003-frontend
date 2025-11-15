@@ -1,1 +1,0 @@
-import{bX as t,ca as s,cb as n,cc as p}from"./index-CfpZo8w-.js";function l(e){return t("/employees/list",e)}function r(e){return s(`/employees/${e}`)}function u(e){return p("/employees",e)}function m(e,o){return n(`/employees/${e}`,o)}function c(e){return t(`/employees/${e}`)}export{c as a,u as b,r as d,l as f,m as u};
